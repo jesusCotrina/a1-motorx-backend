@@ -1,0 +1,15 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.git
+.env
+dev.db
+test.db
+TEST_USERS.txt
+collections.txt
+tests
+requirements-dev.txt
+README.md
+docker-compose.yml

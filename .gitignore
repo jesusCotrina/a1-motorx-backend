@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Bases de datos locales SQLite
+*.db
+
+# Credenciales de usuarios de prueba generadas
+TEST_USERS.txt

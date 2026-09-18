@@ -1,0 +1,67 @@
+name: Build y deploy del backend
+
+on:
+  push:
+    branches: [main]
+
+# Necesario para: escribir el paquete en GitHub Container Registry
+# (packages) y para el login a Azure sin secretos de larga duracion (OIDC,
+# id-token).
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build-y-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Nombre de la imagen en minusculas
+        id: imagen
+        run: |
+          echo "ref=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):latest" >> "$GITHUB_OUTPUT"
+          echo "paquete=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Iniciar sesion en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build y push de la imagen (siempre como :latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.imagen.outputs.ref }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Conservar solo la imagen actual y la anterior en GHCR
+        uses: actions/delete-package-versions@v5
+        continue-on-error: true
+        with:
+          package-name: ${{ steps.imagen.outputs.paquete }}
+          package-type: container
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: true
+
+      - name: Iniciar sesion en Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Actualizar la Container App con la nueva imagen
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name a1-motox-backend \
+              --resource-group a1-motorx \
+              --image ${{ steps.imagen.outputs.ref }}

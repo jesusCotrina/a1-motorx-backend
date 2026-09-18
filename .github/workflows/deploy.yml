@@ -66,6 +66,6 @@ jobs:
         with:
           inlineScript: |
             az containerapp update \
-              --name a1-motox-backend \
+              --name a1-motorx-backend \
               --resource-group a1-motorx \
               --image ${{ steps.imagen.outputs.ref }}

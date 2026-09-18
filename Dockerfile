@@ -3,6 +3,7 @@
 # pytest/ruff/httpx se quedan fuera de esta imagen, son solo para desarrollo).
 FROM python:3.12-slim
 
+
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
